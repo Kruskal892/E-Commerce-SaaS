@@ -16,6 +16,10 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@e-commerve-saa-s/source"]
+    "customConditions": ["@e-commerve-saa-s/source"],
+    "baseUrl": ".",
+    "paths": {
+      "@packages/*": ["packages/*"]
+    }
   }
 }
