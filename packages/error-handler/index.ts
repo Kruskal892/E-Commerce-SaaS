@@ -41,7 +41,7 @@ export class AuthError extends AppError {
 
 // Role / Permission Error
 export class ForbiddenError extends AppError {
-  constructor(message = 'Insufficient permissions') {
+  constructor(message = 'Invalid permissions') {
     super(message, 403);
   }
 }
