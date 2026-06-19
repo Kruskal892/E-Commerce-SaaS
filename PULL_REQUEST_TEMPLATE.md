@@ -1,44 +1,31 @@
-## Summary
+## 🎯 What & Why
 
-<!-- One or two sentences: what this does and why. Lead with the outcome. -->
+<!-- One or two sentences. Lead with the outcome. -->
 
 Closes #
 
-**Type:** `feat` · `fix` · `refactor` · `perf` · `chore` <!-- keep one -->
-**Affected:** <!-- which app/package, e.g. apps/web, packages/ui -->
+## 📝 Changes
 
-## Changes
+-
 
-## <!-- Skimmable bullets. What a reviewer needs to know, not a changelog of every commit. -->
+## 🧪 How to Test
 
-## Screenshots / Recordings
-
-<!-- Before → after for any visual change. Delete the section if none. -->
-
-| Before | After |
-| ------ | ----- |
-|        |       |
-
-## How to Test
-
-<!-- Exact steps. Include env vars / seed data / feature flags if needed. -->
+<!-- Steps for the reviewer. Delete if trivial. -->
 
 1.
 
-## Risk & Rollout
+## 📸 Screenshots
 
-<!-- Delete lines that don't apply. -->
+<!-- Before → after for UI changes. Delete if none. -->
 
-- [ ] **Breaking change** — migration/notes:
-- [ ] Touches **payments / Stripe** — tested in test mode, webhook verified
-- [ ] Touches **Sanity schema** — content migration needed?
-- [ ] Env vars added/changed — added to Vercel + `.env.example`
-- [ ] Affects shared package — downstream apps checked
+## ⚠️ Heads-up
 
-## Checklist
+<!-- Call out anything risky, or delete this section. -->
 
-- [ ] `pnpm build` + typecheck pass (no TS errors)
-- [ ] Lint clean, no stray `console.log`
-- [ ] Tests added/updated where it matters
+- Touches: <!-- Stripe · Sanity schema · env vars · shared package -->
+
+## ✅ Checklist
+
+- [ ] Builds + types pass, lint clean
+- [ ] Tested locally
 - [ ] No unrelated changes bundled in
-- [ ] Self-reviewed the diff
