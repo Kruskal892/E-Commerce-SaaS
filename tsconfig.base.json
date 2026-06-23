@@ -16,6 +16,11 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@e-commerve-saa-s/source"]
+    "customConditions": ["@e-commerve-saa-s/source"],
+    "baseUrl": ".",
+    "paths": {
+      "@packages/error-handler": ["packages/error-handler/index.ts"],
+      "@packages/error-handler/*": ["packages/error-handler/*"]
+    }
   }
 }
