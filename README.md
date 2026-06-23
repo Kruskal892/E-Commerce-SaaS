@@ -1,101 +1,251 @@
-# ECommerveSaaS
+# E-Commerce SaaS Platform
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A microservice-based E-Commerce SaaS backend built with **Express 5**, **TypeScript**, and **Nx** monorepo tooling.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Architecture Overview
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+```
+                    ┌─────────────────────┐
+                    │      Clients        │
+                    └─────────┬───────────┘
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │    API Gateway       │
+                    │    (port 8080)       │
+                    │  ┌───────────────┐  │
+                    │  │ Rate Limiter  │  │
+                    │  │ CORS / Logs   │  │
+                    │  │ Proxy Router  │  │
+                    │  └───────────────┘  │
+                    └─────────┬───────────┘
+                              │
+                 ┌────────────┴────────────┐
+                 ▼                         ▼
+       ┌──────────────────┐      ┌──────────────────┐
+       │  Auth Service     │      │  ... (future)    │
+       │  (port 6001)      │      │                  │
+       └──────────────────┘      └──────────────────┘
+```
 
-## Run tasks
+All services share reusable packages from the `packages/` directory.
 
-To run the dev server for your app, use:
+---
 
-```sh
+## Tech Stack
+
+| Layer             | Technology                                                     |
+| ----------------- | -------------------------------------------------------------- |
+| **Language**      | TypeScript 5.9                                                 |
+| **Runtime**       | Node.js (LTS)                                                  |
+| **Framework**     | Express 5                                                      |
+| **Monorepo**      | Nx 23                                                          |
+| **Build**         | esbuild (auth-service) · Webpack (api-gateway)                 |
+| **Testing**       | Jest 30 + SWC                                                  |
+| **Linting**       | ESLint 9 + Prettier                                            |
+| **Containerization** | Docker (multi-stage via `@nx/docker`)                       |
+| **API Docs**      | Swagger UI Express                                             |
+
+---
+
+## Project Structure
+
+```
+E-Commerce-SaaS/
+├── apps/
+│   ├── api-gateway/          # Central API gateway (Express + Webpack)
+│   ├── api-gateway-e2e/      # E2E tests for the API gateway
+│   ├── auth-service/         # Authentication microservice (Express + esbuild)
+│   └── auth-service-e2e/     # E2E tests for the auth service
+├── packages/
+│   ├── error-handler/        # Shared error classes & Express error middleware
+│   └── middlewares/          # Shared middleware utilities (WIP)
+├── nx.json                   # Nx workspace configuration
+├── tsconfig.base.json        # Shared TypeScript configuration
+├── jest.config.ts            # Root Jest configuration
+├── eslint.config.mjs         # Root ESLint configuration
+└── package.json              # Root dependencies & workspace definition
+```
+
+---
+
+## Apps
+
+### API Gateway (`apps/api-gateway`)
+
+The single entry point for all client requests. It handles cross-cutting concerns before proxying traffic to downstream services.
+
+- **Port:** `8080` (configurable via `PORT` env var)
+- **Features:**
+  - CORS configuration
+  - Request logging with [Morgan](https://github.com/expressjs/morgan)
+  - Rate limiting — 100 req/15 min (anonymous), 1 000 req/15 min (authenticated)
+  - Cookie parsing
+  - Request body parsing (up to 100 MB)
+  - Reverse proxy to downstream services via [express-http-proxy](https://github.com/villadora/express-http-proxy)
+  - Swagger UI integration (ready for API documentation)
+- **Health check:** `GET /gateway-health`
+- **Build tool:** Webpack
+
+### Auth Service (`apps/auth-service`)
+
+Handles user authentication and authorization.
+
+- **Port:** `6001` (configurable via `PORT` env var)
+- **Features:**
+  - CORS configuration
+  - Centralized error handling via shared `@packages/error-handler`
+  - Docker support with auto-generated Dockerfile
+- **Build tool:** esbuild
+
+---
+
+## Packages
+
+### `@packages/error-handler`
+
+A shared error handling library providing typed error classes and an Express error middleware.
+
+**Error Classes:**
+
+| Class              | HTTP Status | Default Message                              |
+| ------------------ | ----------- | -------------------------------------------- |
+| `AppError`         | (custom)    | Base error class                             |
+| `NotFoundError`    | 404         | Resource not found                           |
+| `ValidationError`  | 400         | Invalid request data                         |
+| `AuthError`        | 401         | Unauthorized access                          |
+| `ForbiddenError`   | 403         | Invalid permissions                          |
+| `ServerError`      | 500         | Internal Server Error                        |
+| `RateLimitError`   | 429         | Too many requests, please try again later    |
+
+**Usage:**
+
+```typescript
+import { AuthError } from '@packages/error-handler';
+import { errorMiddleware } from '@packages/error-handler/error-middleware';
+
+// Throw a typed error in any route/controller
+throw new AuthError('Token expired');
+
+// Register the middleware (must be last)
+app.use(errorMiddleware);
+```
+
+### `@packages/middlewares`
+
+Placeholder for shared middleware utilities — currently empty, ready for future additions.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js** — LTS version (v20+)
+- **npm** — v10+
+- **Docker** — *(optional, for containerized deployment)*
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Kruskal892/E-Commerce-SaaS.git
+cd E-Commerce-SaaS
+
+# Install dependencies
+npm install
+```
+
+### Development
+
+```bash
+# Start all services concurrently
+npm run dev
+
+# Or start individual services
+npx nx serve api-gateway
 npx nx serve auth-service
 ```
 
-To create a production bundle:
+| Service       | URL                          |
+| ------------- | ---------------------------- |
+| API Gateway   | http://localhost:8080         |
+| Auth Service  | http://localhost:6001         |
 
-```sh
+### Building
+
+```bash
+# Build all projects
+npx nx run-many --target=build --all
+
+# Build a specific service
 npx nx build auth-service
+npx nx build api-gateway
 ```
 
-To see all available targets to run for a project, run:
+### Testing
 
-```sh
+```bash
+# Run all unit tests
+npx nx run-many --target=test --all
+
+# Run tests for a specific project
+npx nx test auth-service
+
+# Run e2e tests
+npx nx test auth-service-e2e
+npx nx test api-gateway-e2e
+```
+
+### Linting
+
+```bash
+# Lint all projects
+npx nx run-many --target=lint --all
+
+# Lint a specific project
+npx nx lint auth-service
+```
+
+---
+
+## Docker
+
+The auth service includes a Dockerfile for containerized deployment.
+
+```bash
+# Build the Docker image
+npx nx docker:build auth-service
+
+# Run the container
+npx nx docker:run auth-service -p 3000:3000
+```
+
+---
+
+## Nx Workspace Commands
+
+```bash
+# Visualize the project dependency graph
+npx nx graph
+
+# See available targets for a project
 npx nx show project auth-service
+
+# List installed Nx plugins
+npx nx list
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+---
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Contributing
 
-## Add new projects
+1. Create a feature branch from `master`
+2. Follow the [Pull Request Template](./PULL_REQUEST_TEMPLATE.md)
+3. Ensure builds, types, and lint pass before opening a PR
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+---
 
-Use the plugin's generator to create new projects.
+## License
 
-To generate a new application, use:
-
-```sh
-npx nx g @nx/node:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/node:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This project is licensed under the [MIT License](./package.json).
