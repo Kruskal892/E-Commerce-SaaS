@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import { validateRegistrationData } from '../utils/auth.helper';
+import {
+  checkOptRestriction,
+  validateRegistrationData,
+} from '../utils/auth.helper';
 import prisma from 'packages/libs/prisma';
 
 export const userRegistration = async (
@@ -9,6 +12,7 @@ export const userRegistration = async (
 ) => {
   validateRegistrationData(req.body, 'user');
   const { name, email } = req.body;
+
   const existingUser = await prisma.user.findUnique({
     where: {
       email,
@@ -18,4 +22,5 @@ export const userRegistration = async (
   if (existingUser) {
     throw new Error('User already exists with this email!');
   }
+  await checkOptRestriction(email, next);
 };
