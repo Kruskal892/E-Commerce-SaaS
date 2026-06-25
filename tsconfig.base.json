@@ -20,7 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "@packages/error-handler": ["packages/error-handler/index.ts"],
-      "@packages/error-handler/*": ["packages/error-handler/*"]
+      "@packages/error-handler/*": ["packages/error-handler/*"],
+      "packages/*": ["packages/*"]
     }
   }
 }

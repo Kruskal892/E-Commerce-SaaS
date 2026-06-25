@@ -1,8 +1,8 @@
 import crypto from 'crypto';
-import { ValidationError } from '@packages/error-handler';
-import redis from 'packages/libs/redis';
 import { sendEmail } from './sendMail';
 import { NextFunction } from 'express';
+import { ValidationError } from '@packages/error-handler';
+import redis from 'packages/libs/redis';
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -51,6 +51,20 @@ export const checkOptRestriction = async (
       ),
     );
   }
+};
+
+export const trackOtpRequests = async (email: string, next: NextFunction) => {
+  const otpRequestKey = `otp_request_count:${email}`;
+  const otpRequest = parseInt((await redis.get(otpRequestKey)) || '0', 10);
+
+  if (otpRequest >= 5) {
+    await redis.set(`otp_spam_lock:${email}`, 'locked', 'EX', 3600);
+    return next(
+      new ValidationError('Too many OTP requests! Try again after 60 minutes'),
+    );
+  }
+
+  await redis.set(otpRequestKey, otpRequest + 1, 'EX', 3600); // Increment the count and set expiration to 1 hour
 };
 
 export const sendOtp = async (
