@@ -32,7 +32,6 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: true,
-  keyGenerator: (req: any) => req.ip,
 })
 
 app.use(limiter)
