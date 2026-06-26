@@ -7,17 +7,48 @@
   },
   "host": "localhost:6001",
   "basePath": "/",
-  "schemes": [
-    "http"
-  ],
+  "schemes": ["http"],
   "paths": {
-    "/user-register": {
+    "/api/user-register": {
       "post": {
         "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserRegisterDto"
+            }
+          }
+        ],
         "responses": {
+          "200": {
+            "description": "Activation mail sent successfully!"
+          },
           "default": {
             "description": ""
           }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "UserRegisterDto": {
+      "type": "object",
+      "required": ["name", "email", "password"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Minh Nguyen"
+        },
+        "email": {
+          "type": "string",
+          "example": "anhminh345dx@gmail.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "12345678"
         }
       }
     }
