@@ -3,6 +3,7 @@ import cors from 'cors';
 import router from './routes/auth.router';
 import swaggerUi from 'swagger-ui-express';
 import { errorMiddleware } from '@packages/error-handler/error-middleware';
+import cookieParser from 'cookie-parser';
 
 const swaggerDocument = require('./swagger-output.json');
 
@@ -14,6 +15,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   }),
 );
+
+app.use(express.json());
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.send({ message: 'Hello API' });
