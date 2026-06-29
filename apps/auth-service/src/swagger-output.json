@@ -11,44 +11,121 @@
   "paths": {
     "/api/user-register": {
       "post": {
-        "description": "",
+        "summary": "Register a new user",
+        "description": "Validates user data, checks for existing user, and sends an OTP activation email.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
-            "name": "body",
             "in": "body",
+            "name": "body",
             "required": true,
+            "description": "User registration data",
             "schema": {
-              "$ref": "#/definitions/UserRegisterDto"
+              "$ref": "#/definitions/UserRegistrationInput"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Activation mail sent successfully!"
+            "description": "Activation mail sent successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Activation mail sent successfully!"
+                }
+              }
+            }
           },
-          "default": {
-            "description": ""
+          "400": {
+            "description": "Validation error - missing required fields or invalid email"
+          },
+          "409": {
+            "description": "User already exists with this email"
+          }
+        }
+      }
+    },
+    "/api/verify-user": {
+      "post": {
+        "summary": "Verify user with OTP",
+        "description": "Verifies the OTP sent to the user's email, hashes the password, and creates the user account.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "User verification data with OTP",
+            "schema": {
+              "$ref": "#/definitions/VerifyUserInput"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "User created successfully!"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - missing fields, invalid/expired OTP, or incorrect OTP"
+          },
+          "409": {
+            "description": "A user with this email already exists"
           }
         }
       }
     }
   },
   "definitions": {
-    "UserRegisterDto": {
+    "UserRegistrationInput": {
       "type": "object",
       "required": ["name", "email", "password"],
       "properties": {
         "name": {
           "type": "string",
-          "example": "Minh Nguyen"
+          "example": "John Doe"
         },
         "email": {
           "type": "string",
-          "example": "anhminh345dx@gmail.com"
+          "example": "john@example.com"
         },
         "password": {
           "type": "string",
-          "example": "12345678"
+          "example": "securePassword123"
+        }
+      }
+    },
+    "VerifyUserInput": {
+      "type": "object",
+      "required": ["name", "email", "otp", "password"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "email": {
+          "type": "string",
+          "example": "john@example.com"
+        },
+        "otp": {
+          "type": "string",
+          "example": "123456"
+        },
+        "password": {
+          "type": "string",
+          "example": "securePassword123"
         }
       }
     }
